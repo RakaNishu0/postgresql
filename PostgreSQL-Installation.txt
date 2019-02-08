@@ -1,0 +1,289 @@
+
+PostgreSQL
+
+Requirements
+	Strongly Recommended
+		GNU make version 3.80 or newer is required
+		ISO/ANSI C compiler: Recent versions of GCC are recommended
+		GNU Readline library : for allows you to use arrow keys to recall and edit previous commands
+		tar, zlib compression library
+		
+
+	Optional
+		To build the server programming language PL/Perl you need a full Perl installation, including the libperl library and the header files. The minimum required version is Perl 5.8.3. Since PL/Perl will be a shared library, the libperl library must be a shared library also on most platforms.
+		To build the PL/Python server programming language, you need a Python installation with the header files and the distutils module. The minimum required version is Python 2.4. Python 3 is supported if it's version 3.1 or later; but see Section 46.1 when using Python 3.
+		To build the PL/Tcl procedural language, you of course need a Tcl installation. The minimum required version is Tcl 8.4.
+		You need OpenSSL, if you want to support encrypted client connections. The minimum required version is 0.9.8.
+		You need Kerberos, OpenLDAP, and/or PAM, if you want to support authentication using those services.
+		
+https://tedwon.atlassian.net/wiki/spaces/SE/pages/1212988/PostgreSQL
+https://blog.naver.com/nforce7050/140171601531
+
+	Prerequisites
+		# yum install gcc gcc-c++ boost boost-devel pkgconfig uuidd libtool autoconf make coreutils uuid-dev uuid-devel libuuid-devel e2fsprogs-devel readline readline-devel zlib zlib-devel openssl openssl-devel gettext
+
+	Shot Version
+		./configure
+		gmake
+		su
+		gmake install
+		adduser postgres
+		mkdir /usr/local/pgsql/data
+		chown postgres /usr/local/pgsql/data
+		su - postgres
+		/usr/local/pgsql/bin/initdb -D /usr/local/pgsql/data
+		/usr/local/pgsql/bin/postgres -D /usr/local/pgsql/data >logfile 2>&1 &
+		/usr/local/pgsql/bin/createdb test
+		/usr/local/pgsql/bin/psql test
+	
+	Build
+		# ./configure --prefix=/usr/local/pgsql --enable-depend --enable-nls=ko --with-openssl
+		# make && make install
+
+	
+	Links
+		sudo ln -s /usr/local/pgsql/bin/psql /usr/bin/psql
+		sudo ln -s /usr/local/pgsql/bin/dropdb /usr/bin/dropdb
+		sudo ln -s /usr/local/pgsql/bin/dropuser /usr/bin/dropuser
+		sudo ln -s /usr/local/pgsql/bin/createuser /usr/bin/createuser
+		sudo ln -s /usr/local/pgsql/bin/createdb /usr/bin/createdb
+	
+	Add user & make data directory
+		su -
+		adduser postgres
+		chown -R postgres:postgres /usr/local/pgsql
+		mkdir --parents /data/pgsql/data
+		chown -R postgres:postgres /data/pgsql
+	
+	DB Directory 생성
+		# su - postgres
+		$ create db directory
+		$ /usr/local/pgsql/bin/initdb -E UTF-8 --locale=ko_KR.UTF-8 --lc-collate=C -D /data/pgsql/data	
+	
+	PostgreSQL 시작
+		su postgres
+ 
+		### Start foreground running
+		$ sudo -u postgres /usr/local/pgsql/bin/postgres -D /data/pgsql/data
+ 
+		### Start background running
+		$ sudo -u postgres /usr/local/pgsql/bin/pg_ctl -D /data/pgsql/data -l logfile start
+  
+		### Stop
+		$ sudo -u postgres /usr/local/pgsql/bin/pg_ctl -D /data/pgsql/data stop 
+
+		### start up postgresql
+		su - postgres
+		$ /usr/local/pgsql/bin/postgres -D /data/pgsql/data >logfile 2>&1 &
+		### or
+		$ /usr/local/pgsql/bin/pg_ctl -D /DATA/pgsql/data -l logfile start
+		
+	시작/종료 스크립트 생성
+		cd /data/pgsql/
+		vi start.sh
+			#!/bin/bash
+			sudo -u postgres /usr/local/pgsql/bin/pg_ctl -D /data/pgsql/data -l logfile start
+		  
+		vi stop.sh
+			#!/bin/bash
+			sudo -u postgres /usr/local/pgsql/bin/pg_ctl -D /data/pgsql/data stop
+		  
+		chmod 777 *.sh
+
+	테스트 DB 생성 및 접속 테스트
+		# /usr/local/pgsql/bin/createdb test
+		# su - postgres
+		$ psql test
+			psql (9.2.4)
+			Type "help" for help.
+			test=#
+
+		### postgresql.conf ###
+			$ vi /data/pgsql/data/postgresql.conf
+				...
+				# - Connection Settings -
+				 
+				listen_addresses = '*'          # what IP address(es) to listen on;	
+			
+	PostgreSQL Client Authentication Configuration File 수정
+			설정 파일을 수정하여서 원격의 클라이언트가 접속 가능하도록 합니다.
+			pg_hba.conf 파일에 접속을 허락하고자 하는 호스트 아이피 대역폭을 지정합니다.
+
+			변경 후 재시작 필요.
+		### pg_hba.conf ###
+			$ vi /data/pgsql/data/pg_hba.conf
+			...
+			# IPv4 local connections:
+			host    all         all         0.0.0.0     0.0.0.0   password
+			host    all         all         127.0.0.1/32          trust
+			host    all         all         20.20.20.230/32       trust
+			host    all         all         192.168.181.128/32       trust
+			host    all         all         192.168.181.1/32       trust
+			# IPv6 local connections:
+			host    all         all         ::1/128               md5
+			 
+			#config for local machines to connect
+			host    all         all         20.20.20.230 20.20.20.255 trust
+
+	### postgres 패스워드 설정 ###
+		postgres=# ALTER USER postgres WITH PASSWORD 'mypasswd';
+	### 패스워드설정확인 ###
+		postgres=# SELECT * FROM pg_shadow;
+	### 사용자 생성 및 디비 생성 ###
+		postgres=# CREATE USER myuser WITH PASSWORD 'mypasswd';
+		postgres=# CREATE DATABASE mydb;
+	### 생성 확인 ###
+		postgres=# SELECT * FROM pg_database;
+			
+			
+	서비스 등록
+		
+			
+	
+	
+Commands that i did...
+
+	# yum install gcc gcc-c++ readline-devel zlib zlib-devel openssl-devel gettext
+
+	# cd /usr/local/src
+	# tar -xvf postgresql-11.1.tar.gz
+
+	# cd ./postgresql-11.1
+	# ./configure --prefix=/usr/local/pgsql --enable-depend --enable-nls=ko --with-openssl
+	# make && make install
+		PostgreSQL installation complete.
+
+	# ln -s /usr/local/pgsql/bin/psql /usr/bin/psql
+	# ln -s /usr/local/pgsql/bin/dropdb /usr/bin/dropdb
+	# ln -s /usr/local/pgsql/bin/dropuser /usr/bin/dropuser
+	# ln -s /usr/local/pgsql/bin/createuser /usr/bin/createuser
+	# ln -s /usr/local/pgsql/bin/createdb /usr/bin/createdb
+	
+	# adduser postgres
+	# chown -R postgres:postgres /usr/local/pgsql
+	# mkdir --parents /data/pgsql/data
+	# chown -R postgres:postgres /data/pgsql
+	
+	# su - postgres
+	$ /usr/local/pgsql/bin/initdb -E UTF-8 --locale=ko_KR.UTF-8 --lc-collate=C -D /data/pgsql/data	 (<- 반드시 PostgreSQL 권한을 가지는 유저로 실행)
+		The files belonging to this database system will be owned by user "postgres".
+		This user must also own the server process.
+
+		The database cluster will be initialized with locales
+		  COLLATE:  C
+		  CTYPE:    ko_KR.UTF-8
+		  MESSAGES: ko_KR.UTF-8
+		  MONETARY: ko_KR.UTF-8
+		  NUMERIC:  ko_KR.UTF-8
+		  TIME:     ko_KR.UTF-8
+		initdb: could not find suitable text search configuration for locale "ko_KR.UTF-8"
+		The default text search configuration will be set to "simple".
+
+		Data page checksums are disabled.
+
+		fixing permissions on existing directory /data/pgsql/data ... ok
+		creating subdirectories ... ok
+		selecting default max_connections ... 100
+		selecting default shared_buffers ... 128MB
+		selecting dynamic shared memory implementation ... posix
+		creating configuration files ... ok
+		running bootstrap script ... ok
+		performing post-bootstrap initialization ... ok
+		syncing data to disk ... ok
+
+		WARNING: enabling "trust" authentication for local connections
+		You can change this by editing pg_hba.conf or using the option -A, or
+		--auth-local and --auth-host, the next time you run initdb.
+
+		Success. You can now start the database server using:
+			/usr/local/pgsql/bin/pg_ctl -D /data/pgsql/data/ -l logfile start
+	
+	$ /usr/local/pgsql/bin/pg_ctl -D /data/pgsql/data/ -l logfile start
+		waiting for server to start.... done
+		server started
+	
+	$ /usr/local/pgsql/bin/createdb test
+	$ psql test
+		psql (11.1)
+		Type "help" for help.
+
+		test=#
+		test=# help
+		You are using psql, the command-line interface to PostgreSQL.
+		Type:  \copyright for distribution terms
+			   \h for help with SQL commands
+			   \? for help with psql commands
+			   \g or terminate with semicolon to execute query
+			   \q to quit
+
+	$ netstat -nap | grep LISTEN
+		127.0.0.1:5432              0.0.0.0:*                   LISTEN      12120/postgres
+			   
+	$ vi /data/pgsql/data/postgresql.conf
+		# CONNECTIONS AND AUTHENTICATION
+		#------------------------------------------------------------------------------
+
+		# - Connection Settings -
+
+		#listen_addresses = 'localhost'  (<- localhost를 *로 수정 // 주석제거)       # what IP address(es) to listen on;
+												# comma-separated list of addresses;
+												# defaults to 'localhost'; use '*' for all
+												# (change requires restart)
+
+	$ vi /data/pgsql/data/pg_hba.conf
+		# TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+		# "local" is for Unix domain socket connections only
+		local   all             all                                     trust
+		# IPv4 local connections:
+		host    all             all             127.0.0.1/32            trust		(<- 127.0.0.1/32 를 허용하고자 하는 대역으로 변경 // trust 를 password로 변경)
+		# IPv6 local connections:
+		host    all             all             ::1/128                 trust
+		# Allow replication connections from localhost, by a user with the
+		# replication privilege.
+		local   replication     all                                     trust
+		host    replication     all             127.0.0.1/32            trust
+		host    replication     all             ::1/128                 trust
+
+	$ /usr/local/pgsql/bin/pg_ctl -D /data/pgsql/data stop
+		waiting for server to shut down.... done
+		server stopped
+	$ /usr/local/pgsql/bin/pg_ctl -D /data/pgsql/data/ -l logfile start
+		waiting for server to start.... done
+		server started
+	
+	$ netstat -nap | grep LISTEN
+	0.0.0.0:5432                0.0.0.0:*                   LISTEN      12199/postgres
+
+	$ psql
+		psql (11.1)
+		Type "help" for help.
+
+		postgres=# 
+
+		postgres=# ALTER USER postgres WITH PASSWORD 'Hansol2019!';
+			ALTER ROLE
+		postgres=# SELECT * FROM pg_shadow;
+			 usename  | usesysid | usecreatedb | usesuper | userepl | usebypassrls |               passwd                | valuntil | useconfig
+			----------+----------+-------------+----------+---------+--------------+-------------------------------------+----------+-----------
+			 postgres |       10 | t           | t        | t       | t            | md538d1229e4395c009d5a20a155dd46506 |          | 
+
+		postgres=# CREATE USER postuser WITH PASSWORD 'usrpasswd';
+			CREATE ROLE
+		postgres=# SELECT * FROM pg_shadow;
+			 postuser |    16385 | f           | f        | f       | f            | md5cf4200f25df620bcda4e0c1c6014313f |
+
+		postgres=# CREATE DATABASE tutorials;
+			CREATE DATABASE
+		postgres=# SELECT * FROM pg_database;
+			datname  | datdba | encoding | datcollate |  datctype   | datistemplate | datallowconn | datconnlimit | datlastsysoid | datfrozenxid | datminmxid | dattablespace |               datacl                
+		  -----------+--------+----------+------------+-------------+---------------+--------------+--------------+---------------+--------------+------------+---------------+-------------------------------------
+		   tutorials |     10 |        6 | C          | ko_KR.UTF-8 | f             | t            |           -1 |         13236 |          561 |          1 |          1663 | 
+		  
+		postgres=# alter user postuser WITH PASSWORD 'usrpwd';  
+			ALTER ROLE
+
+
+
+			
+		  
